@@ -6,7 +6,7 @@
  * @author    Vyacheslav Malchik <validoll-ru@yandex.ru>
  * @uses      Image Module
  */
- 
+
 class ImageCache
 {
     /**
@@ -24,12 +24,12 @@ class ImageCache
      *                   or processed sub directories when the "mimic_source_dir" config option id set to TRUE
      */
     protected $cache_dir = NULL;
-    
+
     /**
      * @var  object      Kohana image instance
      */
     protected $image = NULL;
-    
+
     /**
      * @var  boolean     A flag for weither we should serve the default or cached image
      */
@@ -44,7 +44,7 @@ class ImageCache
      * @var  string      The source filepath and filename
      */
     protected $source_file = NULL;
-    
+
     /**
      * @var  array       Stores the URL params in the following format
      */
@@ -54,12 +54,12 @@ class ImageCache
         'c' => FALSE, // Crop (bool)
         'q' => NULL   // Quality (int)
     );
-    
+
     /**
      * @var  string      Last modified Unix timestamp of the source file
      */
     protected $source_modified = NULL;
-    
+
     /**
      * @var  string      The cached filename with path ($this->cache_dir)
      */
@@ -72,7 +72,7 @@ class ImageCache
 
     /**
      * Constructorbot
-     * 
+     *
      * @param string $imagepath Path of input image
      * @param string $pattern   Name of applied pattern
      */
@@ -80,10 +80,10 @@ class ImageCache
     {
         // Prevent unnecessary warnings on servers that are set to display E_STRICT errors, these will damage the image data.
         error_reporting(error_reporting() & ~E_STRICT);
-        
+
         // Set the config
         $this->load_config();
-        
+
         // Try to create the cache directory if it does not exist
         $this->_create_cache_dir();
 
@@ -94,7 +94,7 @@ class ImageCache
 
         if (empty($this->cached_file))
         {
-            $this->cache_dir .= $pattern . '/';
+            $this->cache_dir .= $this->pattern . '/';
 
             // Set the source file modified timestamp
             $this->source_modified = filemtime($this->source_file);
@@ -147,11 +147,11 @@ class ImageCache
                 throw new Kohana_Exception($e);
             }
         }
-        
+
         // Set the cache dir
         $this->cache_dir = $this->config['cache_dir'];
     }
-    
+
     /**
      * Try to create the mimic cache dir from the source path if required
      * Set $cache_dir
@@ -181,7 +181,7 @@ class ImageCache
 
     /**
      * Sets the operations params
-     * 
+     *
      * @param string $imagepath Path of input image
      * @param string $pattern   Name of applied pattern
      * @throws HTTP_Exception_404
@@ -201,16 +201,18 @@ class ImageCache
 
         if (empty($pattern))
         {
-            $pattern = Request::current()->param('pattern');
+            $this->pattern = Request::current()->param('pattern');
+        } else {
+            $this->pattern = $pattern;
         }
 
         // If pattern not exist return 404
-        if (!array_key_exists($pattern, $this->config_patterns)) {
+        if (!array_key_exists($this->pattern, $this->config_patterns)) {
             $this->_throw_404();
         }
         if (file_exists($imagepath))
         {
-            $settings = $this->config_patterns->get($pattern);
+            $settings = $this->config_patterns->get($this->pattern);
             list($source_width, $source_height) = getimagesize($imagepath);
             foreach ($settings as $key => &$value)
             {
@@ -282,8 +284,8 @@ class ImageCache
             //Do not scale up images
             if (!$this->config['scale_up'])
             {
-                    if ($this->url_params['w'] > $this->image->width) $this->url_params['w'] = $this->image->width;
-                    if ($this->url_params['h'] > $this->image->height) $this->url_params['h'] = $this->image->height;
+                if ($this->url_params['w'] > $this->image->width) $this->url_params['w'] = $this->image->width;
+                if ($this->url_params['h'] > $this->image->height) $this->url_params['h'] = $this->image->height;
             }
 
             // Get origin size if params is empty
@@ -313,34 +315,34 @@ class ImageCache
 
     protected function _throw_404() {
         throw new HTTP_Exception_404('The requested URL :uri was not found on this server.',
-                                                array(':uri' => Request::$current->uri()));
+            array(':uri' => Request::$current->uri()));
     }
 
     /**
      * Checks if a physical version of the cached image exists
-     * 
+     *
      * @return boolean
      */
     protected function _cached_exists()
     {
         return file_exists($this->cached_file);
     }
-    
+
     /**
      * Checks that the param dimensions are are lower then current image dimensions
-     * 
+     *
      * @return boolean
      */
     protected function _cached_required()
     {
         $image_info = getimagesize($this->source_file);
-        
+
         if (($this->url_params['w'] == $image_info[0]) AND ($this->url_params['h'] == $image_info[1]))
         {
             $this->serve_default = TRUE;
             return FALSE;
         }
-        
+
         return TRUE;
     }
 
@@ -353,7 +355,7 @@ class ImageCache
         {
             // Resize to highest width or height with overflow on the larger side
             $this->image->resize($this->url_params['w'], $this->url_params['h'], Image::INVERSE);
-            
+
             // Crop any overflow from the larger side
             $this->image->crop($this->url_params['w'], $this->url_params['h']);
         }
@@ -362,7 +364,7 @@ class ImageCache
             // Just Resize
             $this->image->resize($this->url_params['w'], $this->url_params['h']);
         }
-        
+
         // Apply any valid watermark params
         $watermarks = Arr::get($this->config, 'watermarks');
         if ( ! empty($watermarks))
@@ -376,10 +378,10 @@ class ImageCache
                 }
             }
         }
-        
+
         // Save
         if($this->url_params['q'])
-		{
+        {
             //Save image with quality param
             $this->image->save($this->cached_file, $this->url_params['q']);
         }
@@ -389,21 +391,21 @@ class ImageCache
             $this->image->save($this->cached_file, Arr::get($this->config, 'quality', 80));
         }
     }
-    
+
     /**
      * Create the image HTTP headers
-     * 
+     *
      * @param  string     path to the file to server (either default or cached version)
      */
     protected function _create_headers($file_data)
-    {        
+    {
         // Create the required header vars
         $last_modified = gmdate('D, d M Y H:i:s', filemtime($file_data)).' GMT';
         $content_type = File::mime($file_data);
         $content_length = filesize($file_data);
         $expires = gmdate('D, d M Y H:i:s', (time() + $this->config['cache_expire'])).' GMT';
         $max_age = 'max-age='.$this->config['cache_expire'].', public';
-        
+
         // Some required headers
         header("Last-Modified: $last_modified");
         header("Content-Type: $content_type");
@@ -419,10 +421,10 @@ class ImageCache
          * proxy servers.
          */
         header("Cache-Control: $max_age");
-        
+
         // Set the 304 Not Modified if required
         $this->_modified_headers($last_modified);
-        
+
         /**
          * The "Connection: close" header allows us to serve the file and let
          * the browser finish processing the script so we can do extra work
@@ -431,14 +433,14 @@ class ImageCache
          */
         header("Connection: close");
     }
-    
+
     /**
      * Rerurns 304 Not Modified HTTP headers if required and exits
-     * 
+     *
      * @param  string  header formatted date
      */
     protected function _modified_headers($last_modified)
-    {  
+    {
         $modified_since = (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']))
             ? stripslashes($_SERVER['HTTP_IF_MODIFIED_SINCE'])
             : FALSE;
@@ -451,7 +453,7 @@ class ImageCache
         header('Connection: close');
         exit();
     }
-    
+
     /**
      * Outputs the cached image file and exits
      */
@@ -460,7 +462,7 @@ class ImageCache
         $file_data = $this->get_cached_path();
         // Create the headers
         $this->_create_headers($file_data);
-        
+
         // Get the file data
         $data = file_get_contents($file_data);
 
@@ -483,7 +485,7 @@ class ImageCache
 
     /**
      * Getter for cached file path
-     * 
+     *
      * @return string
      */
     public function get_cached_path() {

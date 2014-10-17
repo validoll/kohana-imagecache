@@ -1,6 +1,6 @@
 # ImageCache
 
-This module allows you to quickly create resized / cropped images.  
+This module allows you to quickly create resized / cropped images.
 Modified images are cached after the initial request and served up thereafter to help reduce server strain,and also available, even when ImageCache switch off, on the same URL which was generated.
 
 ## Compatibility
@@ -32,28 +32,28 @@ You should copy this files to `APPPATH/config/*` and make changes there, in keep
 
 Empty or undefined options will always fallack to their defaults.
 
-**cache_expire:** 604800  
+**cache_expire:** 604800
 Number of seconds before the browser checks the server for a new version of the modified image.
 
-**cache_dir:** 'cache/'  
+**cache_dir:** 'cache/'
 Path to the image cache directory you would like to use, don't forget the trailing slash!
 
-**quality:** 80  
+**quality:** 80
 The default quality of images when not specified in the URL.
 
-**scale_up:** FALSE  
+**scale_up:** FALSE
 If the image should be scaled up beyond it's original dimensions on resize.
 
-**default_image:** FALSE  
+**default_image:** FALSE
 Default image if the requested image is not available.
 For example:
 
     'default_image'    => 'files/misc/default.png',
 
-**watermarks**  
+**watermarks**
 Configure one or more watermarks. Each configuration key can be passed as a param through an Imagefly URL to apply the watermark.
 
-If no offset is specified, the center of the axis will be used.  
+If no offset is specified, the center of the axis will be used.
 If an offset of TRUE is specified, the bottom of the axis will be used.
 
     // Example watermarks
@@ -84,19 +84,19 @@ Example of pattern settings:
        'watermark' => 'custom_watermark',
     ),
 
-**width**  
+**width**
 Width of cached image. Allow 'px' or '%' suffix.
 
-**height**  
+**height**
 Height of cached image. Allow 'px' or '%' suffix.
 
-**crop**  
+**crop**
 Use crop for cached image. If 'FALSE', then use scale.
 
-**quality**  
+**quality**
 Quality of cached image.
 
-**watermark**  
+**watermark**
 Name of one of watermark from the main config file.
 
 ## Usage Examples
